@@ -1,0 +1,10 @@
+0000000000000000000000000000000000000000 3920f4759acbe462461d7e7d3d6a8b50e8893800 SubhamSathua <subhamsathua@outlook.com> 1773563724 +0530	commit (initial): Initial commit
+3920f4759acbe462461d7e7d3d6a8b50e8893800 cab5bb8e9fd142f6da1f85f78a7f2d48f2abda1a SubhamSathua <subhamsathua@outlook.com> 1773563772 +0530	commit: Initial commit
+cab5bb8e9fd142f6da1f85f78a7f2d48f2abda1a 9b4b11f241bbf109a7b9756cc486f2cc6c7ffe92 SubhamSathua <subhamsathua@outlook.com> 1773563795 +0530	commit: Initial commit
+9b4b11f241bbf109a7b9756cc486f2cc6c7ffe92 b62d2f27ffb62dd9a89374c9f8b2f404634eb0b1 SubhamSathua <subhamsathua@outlook.com> 1773563842 +0530	commit: Modified the UI
+b62d2f27ffb62dd9a89374c9f8b2f404634eb0b1 beb84e9c34ff3ade889a59ca1018a691266fd9b6 SubhamSathua <subhamsathua@outlook.com> 1773564497 +0530	rebase (finish): refs/heads/master onto 3920f4759acbe462461d7e7d3d6a8b50e8893800
+beb84e9c34ff3ade889a59ca1018a691266fd9b6 98dab47a7a9b621aeca83554d32bb32cb7d70c2c SubhamSathua <subhamsathua@outlook.com> 1773564549 +0530	commit: Modified the header and made it responsive
+98dab47a7a9b621aeca83554d32bb32cb7d70c2c 4e44540cdfdf84f324c4d15785c9ca2ed9472b03 SubhamSathua <subhamsathua@outlook.com> 1773564611 +0530	commit: Optimised the site with responsiveness, logic and speed. Also added icons
+4e44540cdfdf84f324c4d15785c9ca2ed9472b03 8fc3629963de6c0d9882bb6804ebb2e47b55da11 SubhamSathua <subhamsathua@outlook.com> 1773565764 +0530	commit: added readme, privacy and security
+8fc3629963de6c0d9882bb6804ebb2e47b55da11 8fc3629963de6c0d9882bb6804ebb2e47b55da11 SubhamSathua <subhamsathua@outlook.com> 1773565815 +0530	Branch: renamed refs/heads/master to refs/heads/main
+8fc3629963de6c0d9882bb6804ebb2e47b55da11 f9602d6a1944951c3e1b8d8421bdfb9ee72fb196 SubhamSathua <subhamsathua@outlook.com> 1773565890 +0530	commit: Added Security notice in the html app
