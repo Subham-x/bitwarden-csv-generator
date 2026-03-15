@@ -1,0 +1,9 @@
+folder,favorite,type,name,notes,fields,reprompt,archivedDate,login_uri,login_username,login_password,login_totp
+Dev/Tuotilo,,login,Student 1,,,0,,"localhost:5173,tuotilo-sjc.web.app,tuotilo.com",A25END03@sjctnc.edu.in,A25END03,
+Dev/Tuotilo,,login,Student 2,,,0,,"localhost:5173,tuotilo-sjc.web.app,tuotilo.com",A25ACD07@sjctnc.edu.in,A25ACD07,
+Dev/Tuotilo,,login,Admin,,,0,,"localhost:5173,tuotilo-sjc.web.app,tuotilo.com",supertuotilo@gmail.com,sjctnc#600001,
+Dev/Tuotilo,,login,Super Admin,,,0,,"localhost:5173,tuotilo-sjc.web.app,tuotilo.com",admin@tuotilo.com,admin123,
+Dev/Tuotilo,,login,Kelvin,,,0,,"localhost:5173,tuotilo-sjc.web.app,tuotilo.com",kevin@sjctnc.edu.in,a1234,
+Dev/Tuotilo,,login,John UAT,,,0,,"localhost:5173,tuotilo-sjc.web.app,tuotilo.com",john@sjctnc.edu.in,a1234john,
+Dev/Tuotilo,,login,Benitta,,,0,,"localhost:5173,tuotilo-sjc.web.app,tuotilo.com",benitta@tuotilo.com,a1234,
+Dev/Tuotilo,,login,Angell,,,0,,"localhost:5173,tuotilo-sjc.web.app,tuotilo.com",angel@tuotilo.com,a1234,

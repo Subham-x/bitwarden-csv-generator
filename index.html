@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitwarden CSV Generator</title>
+    <link rel="icon" type="image/x-icon" href="assets/icon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet">
+    <style>
+        :root {
+            --md-sys-color-primary: #65abff;
+            --md-sys-color-on-primary: #003258;
+            --md-sys-color-primary-container: #004a77;
+            --md-sys-color-on-primary-container: #d0e4ff;
+            --md-sys-color-secondary: #b8c8da;
+            --md-sys-color-on-secondary: #233240;
+            --md-sys-color-surface: #0f1419;
+            --md-sys-color-surface-variant: #1a1f26;
+            --md-sys-color-surface-container: #1e242b;
+            --md-sys-color-surface-container-high: #252c33;
+            --md-sys-color-surface-container-highest: #30373e;
+            --md-sys-color-on-surface: #e1e2e6;
+            --md-sys-color-on-surface-variant: #c1c7ce;
+            --md-sys-color-outline: #8b9199;
+            --md-sys-color-outline-variant: #41484d;
+            --md-sys-color-error: #ffb4ab;
+            --md-sys-color-on-error: #690005;
+            --md-sys-color-success: #7dd87d;
+            --md-sys-color-shadow: rgba(0, 0, 0, 0.3);
+            
+            /* Header specific */
+            --header-bg: rgba(15, 20, 25, 0.7);
+            --header-border: rgba(101, 171, 255, 0.15);
+            --body-bg: linear-gradient(135deg, #0a0e13 0%, #1a1f26 50%, #0f1419 100%);
+        }
+
+        [data-theme="light"] {
+            --md-sys-color-primary: #0061a4;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #d0e4ff;
+            --md-sys-color-on-primary-container: #001d35;
+            --md-sys-color-secondary: #535f70;
+            --md-sys-color-on-secondary: #ffffff;
+            --md-sys-color-surface: #f8f9fb;
+            --md-sys-color-surface-variant: #e1e2ec;
+            --md-sys-color-surface-container: #eceef5;
+            --md-sys-color-surface-container-high: #e6e8ef;
+            --md-sys-color-surface-container-highest: #e0e2e9;
+            --md-sys-color-on-surface: #191c20;
+            --md-sys-color-on-surface-variant: #43474e;
+            --md-sys-color-outline: #73777f;
+            --md-sys-color-outline-variant: #c3c6cf;
+            --md-sys-color-error: #ba1a1a;
+            --md-sys-color-on-error: #ffffff;
+            --md-sys-color-success: #006e1c;
+            --md-sys-color-shadow: rgba(0, 0, 0, 0.1);
+            
+            /* Header specific */
+            --header-bg: rgba(255, 255, 255, 0.7);
+            --header-border: rgba(101, 171, 255, 0.2);
+            --body-bg: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 50%, #f0f2f5 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--body-bg);
+            color: var(--md-sys-color-on-surface);
+            min-height: 100vh;
+            padding: 1.25rem 1rem;
+            padding-top: 5.5rem;
+            line-height: 1.5;
+            position: relative;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(101, 171, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                padding: 0 10%;
+            }
+        }
+
+        @media (min-width: 1440px) {
+            .container {
+                padding: 0 20%;
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            animation: slideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            padding-top: 0;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Navigation Header with Advanced Glass Effect */
+        .nav-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-bottom: none;
+            padding: 1rem 1.5rem;
+            box-shadow: none;
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Animated gradient line at top - removed */
+        .nav-header::before {
+            display: none;
+        }
+
+        /* Glass texture overlay - removed */
+        .nav-header::after {
+            display: none;
+        }
+
+        .nav-header-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            /* Liquid glass effect - fully transparent & refracting */
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+            backdrop-filter: blur(40px) saturate(250%) contrast(1.2) brightness(1.15);
+            -webkit-backdrop-filter: blur(40px) saturate(250%) contrast(1.2) brightness(1.15);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px; /* Pill shape adds to the fluid dynamic */
+            padding: 0.5rem 1rem;
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.25),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 2px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-header-wrapper::before {
+            display: none;
+        }
+
+        @media (min-width: 1024px) {
+            .nav-header-wrapper {
+                padding: 0.5rem 2rem;
+            }
+        }
+
+        @media (min-width: 1440px) {
+            .nav-header-wrapper {
+                margin: 0 10%;
+                width: auto;
+            }
+        }
+
+        /* Branding */
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--md-sys-color-on-surface);
+            transition: all 0.3s ease;
+        }
+
+        .nav-brand:hover {
+            transform: translateY(-1px);
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .brand-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--md-sys-color-primary);
+        }
+
+        .brand-tagline {
+            font-size: 0.65rem;
+            color: var(--md-sys-color-on-surface-variant);
+            font-weight: 500;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-links-wrapper {
+            display: contents;
+        }
+
+        .nav-link {
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--md-sys-color-primary);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-link:hover {
+            color: var(--md-sys-color-primary);
+        }
+
+        .nav-link:hover::after {
+            transform: scaleX(1);
+        }
+
+        .nav-link.active {
+            color: var(--md-sys-color-primary);
+        }
+
+        .nav-link.active::after {
+            transform: scaleX(1);
+        }
+
+        .nav-link .material-symbols-rounded {
+            font-size: 1.1rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        /* Theme toggle and Password toggle - keep capsule style */
+        .icon-toggle {
+            padding: 0.5rem 1rem;
+            background: rgba(101, 171, 255, 0.08);
+            border: 1px solid rgba(101, 171, 255, 0.2);
+            border-radius: 50px;
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .icon-toggle:hover {
+            background: rgba(101, 171, 255, 0.15);
+            border-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-primary);
+            transform: translateY(-1px);
+        }
+
+        .icon-toggle.active {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border-color: var(--md-sys-color-primary);
+        }
+
+        .icon-toggle .material-symbols-rounded {
+            font-size: 1.1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, #88c0ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.3rem;
+            letter-spacing: -0.02em;
+            word-break: break-word;
+        }
+
+        .subtitle {
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .material-symbols-rounded {
+            font-size: 1.2rem;
+        }
+
+        .privacy-badge {
+            background: rgba(125, 216, 125, 0.1);
+            color: var(--md-sys-color-success);
+            padding: 0.4rem 0.9rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(125, 216, 125, 0.3);
+            margin-bottom: 1.25rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .credentials-section,
+            .notes-section,
+            .actions-section {
+                grid-column: 1 / -1;
+            }
+        }
+
+        .card {
+            background: var(--md-sys-color-surface-container);
+            border-radius: 16px;
+            padding: 1.25rem;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            box-shadow: 0 2px 8px var(--md-sys-color-shadow);
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation-fill-mode: both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .card-header .material-symbols-rounded {
+            color: var(--md-sys-color-primary);
+            font-size: 1.3rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .input-group {
+            margin-bottom: 0.85rem;
+            position: relative;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper label {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--md-sys-color-on-surface-variant);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            background: transparent;
+            padding: 0 0.25rem;
+        }
+
+        label.textarea-label {
+            top: 1.25rem;
+            transform: none;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            padding-top: 1.5rem;
+            background: var(--md-sys-color-surface-variant);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: 8px 8px 0 0;
+            border-bottom: 2px solid var(--md-sys-color-outline);
+            color: var(--md-sys-color-on-surface);
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            min-height: 52px;
+        }
+
+        input[type="text"]:focus,
+        input[type="text"]:not(:placeholder-shown),
+        textarea:focus,
+        textarea:not(:placeholder-shown) {
+            outline: none;
+            border-bottom-color: var(--md-sys-color-primary);
+        }
+
+        input[type="text"]:focus + label,
+        input[type="text"]:not(:placeholder-shown) + label,
+        textarea:focus + label,
+        textarea:not(:placeholder-shown) + label {
+            top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--md-sys-color-primary);
+            transform: translateY(0);
+        }
+
+        textarea:focus + label.textarea-label,
+        textarea:not(:placeholder-shown) + label.textarea-label {
+            top: 0.5rem;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            padding-top: 1.5rem;
+        }
+
+        /* Site entries - minimal, borderless */
+        .site-entry {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .site-badge {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .site-url-wrapper {
+            flex: 1;
+        }
+
+        /* Credential entries - side-by-side with badge on left */
+        .credential-entry {
+            background: var(--md-sys-color-surface-variant);
+            padding: 0.85rem;
+            border-radius: 10px;
+            margin-bottom: 0.6rem;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .credential-entry:hover {
+            border-color: var(--md-sys-color-primary);
+        }
+
+        .credential-badge {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .credential-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.85rem;
+            flex: 1;
+        }
+
+        .credential-fields.with-name {
+            grid-template-columns: 1fr;
+        }
+
+        .credential-name-field {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 767px) {
+            .credential-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Same Name Toggle */
+        .same-name-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem;
+            background: var(--md-sys-color-surface-variant);
+            border-radius: 10px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            margin-bottom: 0.85rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--md-sys-color-outline-variant);
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: var(--md-sys-color-primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        .same-name-label {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 0.25rem;
+        }
+
+        .same-name-label-text {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .same-name-label-desc {
+            font-size: 0.75rem;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        #commonNameField {
+            display: none;
+        }
+
+        #commonNameField.active {
+            display: block;
+        }
+
+        .btn {
+            padding: 0.55rem 1.1rem;
+            border: none;
+            border-radius: 18px;
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            box-shadow: 0 2px 8px rgba(101, 171, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #7db8ff;
+            box-shadow: 0 4px 12px rgba(101, 171, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--md-sys-color-surface-container-highest);
+            color: var(--md-sys-color-on-surface);
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .btn-secondary:hover {
+            background: var(--md-sys-color-surface-container-high);
+            border-color: var(--md-sys-color-primary);
+        }
+
+        .btn-ai {
+            background: linear-gradient(90deg, #dfa8a5 0%, #d8b7a4 50%, #c1b3b1 100%);
+            color: #1a1f26; /* Dark text for contrast */
+            border: none;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(223, 168, 165, 0.3);
+            font-weight: 700;
+        }
+
+        /* Light theme specificity for btn-ai */
+        [data-theme="light"] .btn-ai {
+            background: linear-gradient(90deg, #dfa8a5 0%, #d8b7a4 50%, #c1b3b1 100%);
+            color: #191c20;
+            box-shadow: 0 4px 15px rgba(223, 168, 165, 0.4);
+        }
+
+        .btn-ai::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .btn-ai:hover {
+            background: linear-gradient(90deg, #e5b3b0 0%, #dfbfaa 50%, #c8bbba 100%);
+            box-shadow: 0 6px 20px rgba(223, 168, 165, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-remove {
+            background: transparent;
+            color: var(--md-sys-color-error);
+            padding: 0;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .btn-remove:hover {
+            background: rgba(255, 180, 171, 0.1);
+            border-color: var(--md-sys-color-error);
+        }
+
+        .btn-remove .material-symbols-rounded {
+            font-size: 1.2rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.85rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .output-section {
+            margin-top: 1rem;
+        }
+
+        .output-box {
+            background: var(--md-sys-color-surface-variant);
+            border: 2px solid var(--md-sys-color-outline-variant);
+            border-radius: 10px;
+            padding: 0.85rem;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.65rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .output-header label {
+            position: static;
+            transform: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .csv-output {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--md-sys-color-success);
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 0.85rem;
+            background: var(--md-sys-color-surface);
+            border-radius: 6px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        @media (min-width: 1024px) {
+            .csv-output {
+                max-height: 350px;
+            }
+        }
+
+        .csv-output::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .csv-output::-webkit-scrollbar-track {
+            background: var(--md-sys-color-surface-variant);
+            border-radius: 3px;
+        }
+
+        .csv-output::-webkit-scrollbar-thumb {
+            background: var(--md-sys-color-primary);
+            border-radius: 3px;
+        }
+
+        .privacy-notice {
+            background: rgba(101, 171, 255, 0.05);
+            border: 1px solid rgba(101, 171, 255, 0.2);
+            border-radius: 10px;
+            padding: 0.75rem;
+            margin-top: 0.85rem;
+            font-size: 0.8rem;
+            color: var(--md-sys-color-on-surface-variant);
+            display: flex;
+            align-items: start;
+            gap: 0.65rem;
+        }
+
+        .privacy-notice .material-symbols-rounded {
+            color: var(--md-sys-color-primary);
+            flex-shrink: 0;
+            font-size: 1.1rem;
+        }
+
+        /* Auto-extract modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--md-sys-color-surface-container);
+            border-radius: 20px;
+            padding: 1.5rem;
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .modal textarea {
+            min-height: 200px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .help-text {
+            font-size: 0.75rem;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .help-text code {
+            background: var(--md-sys-color-surface-variant);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--md-sys-color-primary);
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        /* Password masking */
+        input.password-masked {
+            -webkit-text-security: disc;
+            text-security: disc;
+        }
+
+        /* Security warning card */
+        .security-warning-card {
+            background: rgba(255, 180, 171, 0.15);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+            border: none;
+        }
+
+        [data-theme="light"] .security-warning-card {
+            background: rgba(186, 26, 26, 0.1);
+        }
+
+        .u-blue {
+            color: var(--md-sys-color-primary);
+            text-decoration-thickness: 2px;
+            text-underline-offset: 2px;
+        }
+
+        .u-red {
+            color: var(--md-sys-color-error);
+            text-decoration-thickness: 2px;
+            text-underline-offset: 2px;
+        }
+
+        /* Tablet styles */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .nav-header-wrapper {
+                grid-template-columns: auto 1fr auto;
+                gap: 1.5rem;
+            }
+
+            .brand-text {
+                display: flex;
+            }
+
+            .nav-links {
+                gap: 1.25rem;
+            }
+        }
+
+        @media (max-width: 767px) {
+            body {
+                padding-top: 4.5rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Mobile header - liquid glass effect */
+            .nav-header {
+                padding: 0.65rem 1rem;
+                background: linear-gradient(135deg, rgba(30, 36, 43, 0.6) 0%, rgba(15, 20, 25, 0.4) 100%);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(25px) saturate(200%);
+                -webkit-backdrop-filter: blur(25px) saturate(200%);
+            }
+
+            [data-theme="light"] .nav-header {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(240, 242, 245, 0.5) 100%);
+                border-bottom: 1px solid rgba(101, 171, 255, 0.15);
+            }
+
+            .nav-header-wrapper {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                justify-content: flex-start;
+                padding: 0;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                border-radius: 0;
+            }
+
+            .nav-header-wrapper::before {
+                display: none;
+            }
+
+            /* Brand */
+            .nav-brand {
+                margin: 0;
+                padding: 0;
+            }
+
+            .brand-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 10px;
+                object-fit: cover;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .brand-text {
+                display: none;
+            }
+
+            /* Navigation links wrapper */
+            .nav-links-wrapper {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                flex: 1;
+                /* Allow floating nav-actions outside normal flow */
+                position: static;
+            }
+
+            /* Navigation links */
+            .nav-links {
+                display: flex;
+                gap: 1.25rem;
+                align-items: center;
+                flex: 1;
+                background: transparent;
+                border: none;
+                padding: 0;
+                box-shadow: none;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                overflow-x: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                justify-content: flex-start;
+            }
+            
+            .nav-links::-webkit-scrollbar {
+                display: none;
+            }
+
+            .nav-link {
+                font-size: 0.85rem;
+                font-weight: 600;
+                white-space: nowrap;
+                padding: 0;
+                color: var(--md-sys-color-on-surface);
+            }
+
+            .nav-link::after {
+                display: none;
+            }
+
+            .nav-link:hover {
+                color: var(--md-sys-color-primary);
+            }
+
+            .nav-link .material-symbols-rounded {
+                font-size: 1rem;
+                color: var(--md-sys-color-on-surface-variant);
+            }
+
+            /* Action buttons - matched exactly to screenshot as floating pill */
+            .nav-actions {
+                position: absolute;
+                top: 4.2rem;
+                right: 1rem;
+                background: rgba(30, 36, 43, 0.7);
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                border: 1px solid rgba(101, 171, 255, 0.2);
+                border-radius: 50px;
+                padding: 0.25rem;
+                display: flex;
+                gap: 0.25rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                z-index: 10;
+            }
+
+            [data-theme="light"] .nav-actions {
+                background: rgba(255, 255, 255, 0.7);
+            }
+
+            .icon-toggle {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+                background: transparent;
+                border: none;
+                margin: 0;
+            }
+            
+            .icon-toggle.active {
+                background: rgba(101, 171, 255, 0.15);
+            }
+
+            .icon-toggle .material-symbols-rounded {
+                font-size: 1.1rem;
+            }
+
+            /* Fix input fields in mobile */
+            input[type="text"],
+            textarea {
+                font-size: 0.95rem;
+                padding: 1rem;
+                padding-top: 1.5rem;
+                min-height: 54px;
+            }
+
+            .input-wrapper label {
+                font-size: 0.95rem;
+            }
+
+            .input-wrapper label:not(.textarea-label) {
+                top: 50%;
+            }
+
+            input[type="text"]:focus + label,
+            input[type="text"]:not(:placeholder-shown) + label {
+                font-size: 0.75rem;
+                top: 0.5rem;
+            }
+
+            /* Fix credential and site entry layouts */
+            .credential-entry,
+            .site-entry {
+                padding: 1rem;
+            }
+
+            .credential-fields {
+                gap: 1rem;
+            }
+
+            .input-group {
+                margin-bottom: 1rem;
+            }
+
+            /* Ensure remove button stays circular */
+            .btn-remove {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                min-height: 38px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-link {
+                font-size: 0.8rem;
+            }
+
+            .nav-link .material-symbols-rounded {
+                display: none;
+            }
+
+            .nav-links {
+                gap: 0.85rem;
+            }
+
+            .icon-toggle {
+                padding: 0.45rem 0.85rem;
+            }
+
+            #toggleText {
+                display: none;
+            }
+
+            .brand-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BitCSV Generator</h1>
+            <p class="subtitle">
+                <span class="material-symbols-rounded">lock</span>
+                Privacy-First Password Export Tool
+            </p>
+        </header>
+
+        <div class="privacy-badge">
+            <span class="material-symbols-rounded">verified_user</span>
+            100% Client-Side - Your Data Never Leaves Your Device
+        </div>
+
+        <!-- Navigation Header -->
+        <div class="nav-header">
+            <div class="nav-header-wrapper">
+                <a href="#" class="nav-brand" onclick="scrollToSection('folder-section'); return false;">
+                    <img src="assets/icon.png" alt="BitCSV Logo" class="brand-icon">
+                    <div class="brand-text">
+                        <div class="brand-name">BitCSV</div>
+                        <div class="brand-tagline">Bitwarden CSV Generator</div>
+                    </div>
+                </a>
+
+                <div class="nav-links-wrapper">
+                    <div class="nav-links">
+                        <a href="#folder" class="nav-link" onclick="scrollToSection('folder-section'); return false;">
+                            <span class="material-symbols-rounded">folder</span>
+                            Folder
+                        </a>
+                        <a href="#credentials" class="nav-link" onclick="scrollToSection('credentials-section'); return false;">
+                            <span class="material-symbols-rounded">badge</span>
+                            Credentials
+                        </a>
+                        <a href="#websites" class="nav-link" onclick="scrollToSection('websites-section'); return false;">
+                            <span class="material-symbols-rounded">language</span>
+                            Websites
+                        </a>
+                        <a href="#notes" class="nav-link" onclick="scrollToSection('notes-section'); return false;">
+                            <span class="material-symbols-rounded">note</span>
+                            Notes
+                        </a>
+                    </div>
+
+                    <div class="nav-actions">
+                        <button class="icon-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+                            <span class="material-symbols-rounded" id="themeIcon">light_mode</span>
+                        </button>
+                        <button class="icon-toggle" id="passwordToggle" onclick="togglePasswordVisibility()" title="Toggle password visibility">
+                            <span class="material-symbols-rounded">visibility_off</span>
+                            <span id="toggleText">Hide</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card folder-section" id="folder-section">
+                <div class="card-header">
+                    <span class="material-symbols-rounded">folder</span>
+                    <h2 class="card-title">Folder</h2>
+                </div>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="text" id="folderName" placeholder=" ">
+                        <label for="folderName">Folder Name</label>
+                    </div>
+                </div>
+            </div>
+
+            <div style="grid-column: 1 / -1;"></div>
+
+            <div class="card credentials-section" id="credentials-section" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <span class="material-symbols-rounded">badge</span>
+                    <h2 class="card-title">Credentials</h2>
+                </div>
+                
+                <div class="same-name-control">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sameNameToggle" onchange="toggleSameName()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label class="same-name-label" for="sameNameToggle">
+                        <div class="same-name-label-text">Use Same Name for All</div>
+                        <div class="same-name-label-desc">Apply one name to all credential entries</div>
+                    </label>
+                </div>
+
+                <div class="input-group" id="commonNameField">
+                    <div class="input-wrapper">
+                        <input type="text" id="commonName" placeholder=" ">
+                        <label for="commonName">Common Name</label>
+                    </div>
+                </div>
+
+                <div id="credentialsContainer"></div>
+                <div class="button-group" style="margin-top: 0.65rem;">
+                    <button class="btn btn-secondary" onclick="addCredential()">
+                        <span class="material-symbols-rounded">add</span>
+                        Add Credential
+                    </button>
+                    <button class="btn btn-ai" onclick="openAutoExtractCredentials()">
+                        <span class="material-symbols-rounded">auto_awesome</span>
+                        Auto Extract
+                    </button>
+                </div>
+            </div>
+
+            <div class="card websites-section" id="websites-section" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <span class="material-symbols-rounded">language</span>
+                    <h2 class="card-title">Websites</h2>
+                </div>
+                <div id="sitesContainer"></div>
+                <div class="button-group" style="margin-top: 0.65rem;">
+                    <button class="btn btn-secondary" onclick="addSite()">
+                        <span class="material-symbols-rounded">add</span>
+                        Add Website
+                    </button>
+                    <button class="btn btn-ai" onclick="openAutoExtractWebsites()">
+                        <span class="material-symbols-rounded">auto_awesome</span>
+                        Auto Extract
+                    </button>
+                </div>
+            </div>
+
+            <div class="card notes-section" id="notes-section" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <span class="material-symbols-rounded">note</span>
+                    <h2 class="card-title">Notes (Optional)</h2>
+                </div>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <textarea id="globalNotes" placeholder=" " style="min-height: 85px;"></textarea>
+                        <label for="globalNotes" class="textarea-label">Additional notes for all entries</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card actions-section" style="grid-column: 1 / -1;">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="prepareDownload()">
+                        <span class="material-symbols-rounded">download</span>
+                        Generate & Download CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearAll()">
+                        <span class="material-symbols-rounded">delete</span>
+                        Clear All
+                    </button>
+                </div>
+
+                <div class="output-section" id="outputSection" style="display: none;">
+                    <div class="output-box">
+                        <div class="output-header">
+                            <label>CSV Preview</label>
+                            <button class="btn btn-secondary" onclick="copyToClipboard()">
+                                <span class="material-symbols-rounded">content_copy</span>
+                                Copy
+                            </button>
+                        </div>
+                        <pre class="csv-output" id="csvOutput"></pre>
+                    </div>
+                </div>
+
+                <div class="privacy-notice">
+                    <span class="material-symbols-rounded">info</span>
+                    <div>
+                        <strong>Privacy & Security:</strong> All processing happens entirely in your browser. No data is transmitted to any server.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Notice below last card -->
+            <div class="security-footer" style="grid-column: 1 / -1; margin-top: 0.5rem; padding: 1.5rem; background: var(--md-sys-color-surface-variant); border-radius: 16px; border: 1px solid var(--md-sys-color-outline-variant); display: flex; align-items: flex-start; gap: 1rem; animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1); animation-fill-mode: both;">
+                <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary); font-size: 2rem;">gpp_good</span>
+                <div>
+                    <h3 style="font-size: 1.1rem; color: var(--md-sys-color-on-surface); margin-bottom: 0.5rem; font-weight: 600;">Security First Approach</h3>
+                    <p style="font-size: 0.9rem; color: var(--md-sys-color-on-surface-variant); line-height: 1.5;">This BitCSV Generator operates completely as a static webpage. No data is tracked, logged, or sent to any server. Your generated CSVs are created locally within your browser's memory, ensuring your sensitive credentials never leave your device.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto Extract Credentials Modal -->
+    <div class="modal" id="autoExtractCredentialsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Auto Extract Credentials</h3>
+                <button class="btn btn-remove" onclick="closeAutoExtractCredentials()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="help-text">
+                Paste your credentials with each username/email and password on separate lines:<br><br>
+                <code>A25END03@sjctnc.edu.in</code><br>
+                <code>A25END03</code><br>
+                <br>
+                <code>A25ACD07@sjctnc.edu.in</code><br>
+                <code>A25ACD07</code><br>
+                <br>
+                <em>(Blank lines will be ignored)</em>
+            </div>
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <textarea id="autoExtractCredentialsText" placeholder=" "></textarea>
+                    <label for="autoExtractCredentialsText" class="textarea-label">Paste credentials here</label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeAutoExtractCredentials()">Cancel</button>
+                <button class="btn btn-primary" onclick="processAutoExtractCredentials()">
+                    <span class="material-symbols-rounded">check</span>
+                    Extract
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto Extract Websites Modal -->
+    <div class="modal" id="autoExtractWebsitesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Auto Extract Websites</h3>
+                <button class="btn btn-remove" onclick="closeAutoExtractWebsites()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="help-text">
+                Paste your website URLs, one per line:<br><br>
+                <code>https://example.com</code><br>
+                <code>https://google.com</code><br>
+                <code>facebook.com</code><br>
+                <code>github.com/username</code><br>
+                <br>
+                <em>(Blank lines will be ignored, http/https optional)</em>
+            </div>
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <textarea id="autoExtractWebsitesText" placeholder=" "></textarea>
+                    <label for="autoExtractWebsitesText" class="textarea-label">Paste website URLs here</label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeAutoExtractWebsites()">Cancel</button>
+                <button class="btn btn-primary" onclick="processAutoExtractWebsites()">
+                    <span class="material-symbols-rounded">check</span>
+                    Extract
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Download Notice Modal -->
+    <div class="modal" id="securityDownloadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary); vertical-align: middle; margin-right: 8px; font-size: 1.2rem;">security</span>
+                    Security Notice
+                </h3>
+                <button class="btn btn-remove" onclick="closeSecurityDownloadModal()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="help-text" style="font-size: 0.9rem; color: var(--md-sys-color-on-surface);">
+                <p style="margin-bottom: 1rem; font-size: 1rem;"><strong>Your privacy is protected.</strong> Before downloading, please note:</p>
+                <div class="security-warning-card">
+                    <strong>Safe Storage:</strong> Ensure you store the downloaded CSV in a <u class="u-blue">secure location</u> and <u class="u-red">delete</u> it after importing to Bitwarden as it contains <u class="u-red">plain passwords and notes</u>.
+                </div>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.6;">
+                    <li><strong>100% Local Processing:</strong> All data formatting happens entirely on your device.</li>
+                    <li><strong>No Server Uploads:</strong> Your sensitive credentials have not been sent to any external server.</li>
+                </ul>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeSecurityDownloadModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="generateCSV()">
+                    <span class="material-symbols-rounded">download</span>
+                    Download Securely
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let siteCount = 0;
+        let credentialCount = 0;
+        let passwordsHidden = false;
+
+        // Theme toggle - detects system preference on load
+        function initTheme() {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (prefersDark) {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+            updateThemeIcon();
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'light') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const themeIcon = document.getElementById('themeIcon');
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'light') {
+                themeIcon.textContent = 'dark_mode';
+            } else {
+                themeIcon.textContent = 'light_mode';
+            }
+        }
+
+        // Initialize theme on page load
+        initTheme();
+
+        function toggleSameName() {
+            const toggle = document.getElementById('sameNameToggle');
+            const commonNameField = document.getElementById('commonNameField');
+            const credentialEntries = document.querySelectorAll('.credential-entry');
+            
+            if (toggle.checked) {
+                commonNameField.classList.add('active');
+                // Hide individual name fields
+                credentialEntries.forEach(entry => {
+                    const nameField = entry.querySelector('.credential-name-field');
+                    if (nameField) {
+                        nameField.style.display = 'none';
+                    }
+                });
+            } else {
+                commonNameField.classList.remove('active');
+                // Show individual name fields
+                credentialEntries.forEach(entry => {
+                    const nameField = entry.querySelector('.credential-name-field');
+                    if (nameField) {
+                        nameField.style.display = 'block';
+                    }
+                });
+            }
+        }
+
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function togglePasswordVisibility() {
+            passwordsHidden = !passwordsHidden;
+            const toggle = document.getElementById('passwordToggle');
+            const toggleText = document.getElementById('toggleText');
+            const passwordInputs = document.querySelectorAll('.cred-password');
+            
+            if (passwordsHidden) {
+                toggle.classList.add('active');
+                toggleText.textContent = 'Show';
+                toggle.querySelector('.material-symbols-rounded').textContent = 'visibility';
+                passwordInputs.forEach(input => {
+                    input.classList.add('password-masked');
+                });
+            } else {
+                toggle.classList.remove('active');
+                toggleText.textContent = 'Hide';
+                toggle.querySelector('.material-symbols-rounded').textContent = 'visibility_off';
+                passwordInputs.forEach(input => {
+                    input.classList.remove('password-masked');
+                });
+            }
+        }
+
+        function addSite() {
+            siteCount++;
+            const container = document.getElementById('sitesContainer');
+            const siteEntry = document.createElement('div');
+            siteEntry.className = 'site-entry';
+            siteEntry.id = `site-${siteCount}`;
+            siteEntry.innerHTML = `
+                <div class="site-badge">${siteCount}</div>
+                <div class="input-group site-url-wrapper">
+                    <div class="input-wrapper">
+                        <input type="text" class="site-url" id="site-url-${siteCount}" placeholder=" ">
+                        <label for="site-url-${siteCount}">Website URL</label>
+                    </div>
+                </div>
+                <button class="btn btn-remove" onclick="removeSite(${siteCount})" title="Remove">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            `;
+            container.appendChild(siteEntry);
+        }
+
+        function removeSite(id) {
+            const element = document.getElementById(`site-${id}`);
+            if (element) {
+                element.style.opacity = '0';
+                element.style.transform = 'translateX(-20px)';
+                setTimeout(() => element.remove(), 200);
+            }
+        }
+
+        function addCredential() {
+            credentialCount++;
+            const container = document.getElementById('credentialsContainer');
+            const credEntry = document.createElement('div');
+            const sameNameActive = document.getElementById('sameNameToggle').checked;
+            
+            credEntry.className = 'credential-entry';
+            credEntry.id = `cred-${credentialCount}`;
+            credEntry.innerHTML = `
+                <div class="credential-badge">${credentialCount}</div>
+                <div class="credential-fields">
+                    <div class="input-group credential-name-field" style="${sameNameActive ? 'display: none;' : ''}">
+                        <div class="input-wrapper">
+                            <input type="text" class="cred-name" id="cred-name-${credentialCount}" placeholder=" ">
+                            <label for="cred-name-${credentialCount}">Entry Name</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input type="text" class="cred-username" id="cred-username-${credentialCount}" placeholder=" ">
+                            <label for="cred-username-${credentialCount}">Username / Email</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input type="text" class="cred-password ${passwordsHidden ? 'password-masked' : ''}" id="cred-password-${credentialCount}" placeholder=" ">
+                            <label for="cred-password-${credentialCount}">Password</label>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-remove" onclick="removeCredential(${credentialCount})" title="Remove">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            `;
+            container.appendChild(credEntry);
+        }
+
+        function removeCredential(id) {
+            const element = document.getElementById(`cred-${id}`);
+            if (element) {
+                element.style.opacity = '0';
+                element.style.transform = 'translateX(-20px)';
+                setTimeout(() => element.remove(), 200);
+            }
+        }
+
+        // Auto-extract credentials functions
+        function openAutoExtractCredentials() {
+            document.getElementById('autoExtractCredentialsModal').classList.add('active');
+            document.getElementById('autoExtractCredentialsText').value = '';
+            document.getElementById('autoExtractCredentialsText').focus();
+        }
+
+        function closeAutoExtractCredentials() {
+            document.getElementById('autoExtractCredentialsModal').classList.remove('active');
+        }
+
+        function processAutoExtractCredentials() {
+            const text = document.getElementById('autoExtractCredentialsText').value;
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            
+            if (lines.length === 0) {
+                alert('Please paste some credentials');
+                return;
+            }
+
+            // Process pairs: every 2 lines = username, password
+            for (let i = 0; i < lines.length; i += 2) {
+                if (i + 1 < lines.length) {
+                    addCredential();
+                    const lastCred = document.querySelector(`#cred-${credentialCount}`);
+                    if (lastCred) {
+                        lastCred.querySelector('.cred-username').value = lines[i];
+                        lastCred.querySelector('.cred-password').value = lines[i + 1];
+                    }
+                } else {
+                    // Odd number, last line is just username
+                    addCredential();
+                    const lastCred = document.querySelector(`#cred-${credentialCount}`);
+                    if (lastCred) {
+                        lastCred.querySelector('.cred-username').value = lines[i];
+                    }
+                }
+            }
+
+            closeAutoExtractCredentials();
+        }
+
+        // Auto-extract websites functions
+        function openAutoExtractWebsites() {
+            document.getElementById('autoExtractWebsitesModal').classList.add('active');
+            document.getElementById('autoExtractWebsitesText').value = '';
+            document.getElementById('autoExtractWebsitesText').focus();
+        }
+
+        function closeAutoExtractWebsites() {
+            document.getElementById('autoExtractWebsitesModal').classList.remove('active');
+        }
+
+        function processAutoExtractWebsites() {
+            const text = document.getElementById('autoExtractWebsitesText').value;
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            
+            if (lines.length === 0) {
+                alert('Please paste some website URLs');
+                return;
+            }
+
+            // Add each URL as a website entry
+            lines.forEach(url => {
+                addSite();
+                const lastSite = document.querySelector(`#site-${siteCount}`);
+                if (lastSite) {
+                    lastSite.querySelector('.site-url').value = url;
+                }
+            });
+
+            closeAutoExtractWebsites();
+        }
+
+        function escapeCSV(str) {
+            if (!str) return '';
+            str = String(str);
+            if (str.includes('"') || str.includes(',') || str.includes('\n')) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+
+        function prepareDownload() {
+            // Get all credentials
+            const credentials = Array.from(document.querySelectorAll('.credential-entry')).map(entry => ({
+                username: entry.querySelector('.cred-username')?.value.trim() || '',
+                password: entry.querySelector('.cred-password')?.value.trim() || ''
+            })).filter(cred => cred.username || cred.password);
+
+            if (credentials.length === 0) {
+                alert('Please add at least one credential.');
+                return;
+            }
+
+            document.getElementById('securityDownloadModal').classList.add('active');
+        }
+
+        function closeSecurityDownloadModal() {
+            document.getElementById('securityDownloadModal').classList.remove('active');
+        }
+
+        function generateCSV() {
+            closeSecurityDownloadModal();
+            const folderName = document.getElementById('folderName').value.trim();
+            const globalNotes = document.getElementById('globalNotes').value.trim();
+            const sameNameActive = document.getElementById('sameNameToggle').checked;
+            const commonName = document.getElementById('commonName').value.trim();
+            
+            // Get all sites (URLs)
+            const sites = Array.from(document.querySelectorAll('.site-entry')).map(entry => ({
+                url: entry.querySelector('.site-url')?.value.trim() || ''
+            })).filter(site => site.url);
+
+            // Get all credentials with names
+            const credentials = Array.from(document.querySelectorAll('.credential-entry')).map(entry => ({
+                name: sameNameActive ? commonName : (entry.querySelector('.cred-name')?.value.trim() || ''),
+                username: entry.querySelector('.cred-username')?.value.trim() || '',
+                password: entry.querySelector('.cred-password')?.value.trim() || ''
+            })).filter(cred => cred.username || cred.password);
+
+            if (credentials.length === 0) {
+                alert('Please add at least one credential.');
+                return;
+            }
+
+            // Bitwarden CSV format header
+            let csv = 'folder,favorite,type,name,notes,fields,reprompt,archivedDate,login_uri,login_username,login_password,login_totp\n';
+
+            // Create comma-separated URL list (no spaces)
+            const loginUri = sites.map(s => s.url).join(',');
+
+            // Generate one row per credential
+            credentials.forEach((cred, index) => {
+                const entryName = cred.name || `Entry ${index + 1}`;
+                
+                const row = [
+                    escapeCSV(folderName),
+                    '',  // favorite
+                    'login',
+                    escapeCSV(entryName),
+                    escapeCSV(globalNotes),
+                    '',  // fields
+                    '0', // reprompt
+                    '',  // archivedDate
+                    escapeCSV(loginUri),
+                    escapeCSV(cred.username),
+                    escapeCSV(cred.password),
+                    ''   // totp
+                ];
+                csv += row.join(',') + '\n';
+            });
+
+            // Display preview
+            document.getElementById('csvOutput').textContent = csv;
+            document.getElementById('outputSection').style.display = 'block';
+
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const filename = folderName ? `bitwarden_${folderName.replace(/\s+/g, '_')}.csv` : 'bitwarden_export.csv';
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function copyToClipboard() {
+            const csvText = document.getElementById('csvOutput').textContent;
+            navigator.clipboard.writeText(csvText).then(() => {
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-rounded">check</span>Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                document.getElementById('folderName').value = '';
+                document.getElementById('globalNotes').value = '';
+                document.getElementById('commonName').value = '';
+                document.getElementById('sameNameToggle').checked = false;
+                document.getElementById('commonNameField').classList.remove('active');
+                document.getElementById('sitesContainer').innerHTML = '';
+                document.getElementById('credentialsContainer').innerHTML = '';
+                document.getElementById('outputSection').style.display = 'none';
+                siteCount = 0;
+                credentialCount = 0;
+            }
+        }
+
+        // Initialize with one site and one credential
+        addSite();
+        addCredential();
+    </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+
+
+Logic
+- cols (fixed): folder,favorite,type,name,notes,fields,reprompt,archivedDate,login_uri,login_username,login_password,login_totp
+- login_uri : comma separated without space : stite1,site2 OK, site1, sit2, sit3 WRONG no space
+- Num of sites != num of rows
+- Num of Ids = num of rows
+- add a `name` field to each ids without auto, 
+- add a "Same name" switch if ON all name = common name input (give a input)
+
+# See img of excel for rows
+
+CSV
+folder,favorite,type,name,notes,fields,reprompt,archivedDate,login_uri,login_username,login_password,login_totp
+Test,,login,Test Account 4,,"Email: demoa@ds.mail
+Password: 12qwsdfgv",0,,"http://localhost:5173,https://tuotilo-sjc.web.app,https://tuotilo.com",test4@example.com,Pass@1234,
+Test,,login,Test Account 5,,,0,,"http://localhost:5173,https://tuotilo-sjc.web.app,https://tuotilo.com",test5@example.com,Pass@1235,
+Dev,,login,Tuotilo,,,0,,"http://localhost:5173,https://tuotilo-sjc.web.app,https://tuotilo.com",supertuotilo@gmail.com,Tuotilo$Admin,
+

@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitwarden CSV Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet">
+    <style>
+        :root {
+            --md-sys-color-primary: #65abff;
+            --md-sys-color-on-primary: #003258;
+            --md-sys-color-primary-container: #004a77;
+            --md-sys-color-on-primary-container: #d0e4ff;
+            --md-sys-color-secondary: #b8c8da;
+            --md-sys-color-on-secondary: #233240;
+            --md-sys-color-surface: #0f1419;
+            --md-sys-color-surface-variant: #1a1f26;
+            --md-sys-color-surface-container: #1e242b;
+            --md-sys-color-surface-container-high: #252c33;
+            --md-sys-color-surface-container-highest: #30373e;
+            --md-sys-color-on-surface: #e1e2e6;
+            --md-sys-color-on-surface-variant: #c1c7ce;
+            --md-sys-color-outline: #8b9199;
+            --md-sys-color-outline-variant: #41484d;
+            --md-sys-color-error: #ffb4ab;
+            --md-sys-color-on-error: #690005;
+            --md-sys-color-success: #7dd87d;
+            --md-sys-color-shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0e13 0%, #1a1f26 50%, #0f1419 100%);
+            color: var(--md-sys-color-on-surface);
+            min-height: 100vh;
+            padding: 1.5rem 1rem;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(101, 171, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: slideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, #88c0ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.35rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .material-symbols-rounded {
+            font-size: 1.2rem;
+        }
+
+        .card {
+            background: var(--md-sys-color-surface-container);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            box-shadow: 0 4px 16px var(--md-sys-color-shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation-fill-mode: both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+
+        .card:hover {
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 8px 24px rgba(101, 171, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .card-header .material-symbols-rounded {
+            color: var(--md-sys-color-primary);
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        label {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 500;
+            font-size: 1rem;
+            color: var(--md-sys-color-on-surface-variant);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            background: transparent;
+            padding: 0 0.25rem;
+        }
+
+        label.textarea-label {
+            top: 1rem;
+            transform: none;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            padding-top: 1.5rem;
+            background: var(--md-sys-color-surface-variant);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: 8px 8px 0 0;
+            border-bottom: 2px solid var(--md-sys-color-outline);
+            color: var(--md-sys-color-on-surface);
+            font-family: 'Rubik', sans-serif;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="text"]:not(:placeholder-shown),
+        textarea:focus,
+        textarea:not(:placeholder-shown) {
+            outline: none;
+            border-bottom-color: var(--md-sys-color-primary);
+            border-bottom-width: 2px;
+        }
+
+        input[type="text"]:focus + label,
+        input[type="text"]:not(:placeholder-shown) + label,
+        textarea:focus + label,
+        textarea:not(:placeholder-shown) + label {
+            top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--md-sys-color-primary);
+            transform: translateY(0);
+        }
+
+        textarea:focus + label.textarea-label,
+        textarea:not(:placeholder-shown) + label.textarea-label {
+            top: 0.5rem;
+        }
+
+        textarea {
+            min-height: 70px;
+            resize: vertical;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            padding-top: 1.5rem;
+        }
+
+        .site-entry,
+        .credential-entry {
+            background: var(--md-sys-color-surface-variant);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .site-entry:hover,
+        .credential-entry:hover {
+            border-color: var(--md-sys-color-primary);
+            transform: translateX(4px);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .entry-number {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 20px;
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            box-shadow: 0 2px 8px rgba(101, 171, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #7db8ff;
+            box-shadow: 0 4px 16px rgba(101, 171, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--md-sys-color-surface-container-highest);
+            color: var(--md-sys-color-on-surface);
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .btn-secondary:hover {
+            background: var(--md-sys-color-surface-container-high);
+            border-color: var(--md-sys-color-primary);
+        }
+
+        .btn-remove {
+            background: transparent;
+            color: var(--md-sys-color-error);
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-remove:hover {
+            background: rgba(255, 180, 171, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .output-section {
+            margin-top: 1rem;
+        }
+
+        .output-box {
+            background: var(--md-sys-color-surface-variant);
+            border: 2px solid var(--md-sys-color-outline-variant);
+            border-radius: 12px;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .csv-output {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--md-sys-color-success);
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--md-sys-color-surface);
+            border-radius: 8px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .csv-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .csv-output::-webkit-scrollbar-track {
+            background: var(--md-sys-color-surface-variant);
+            border-radius: 4px;
+        }
+
+        .csv-output::-webkit-scrollbar-thumb {
+            background: var(--md-sys-color-primary);
+            border-radius: 4px;
+        }
+
+        .privacy-badge {
+            background: rgba(125, 216, 125, 0.1);
+            color: var(--md-sys-color-success);
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(125, 216, 125, 0.3);
+            margin-bottom: 1rem;
+        }
+
+        .privacy-notice {
+            background: rgba(101, 171, 255, 0.05);
+            border: 1px solid rgba(101, 171, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.875rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--md-sys-color-on-surface-variant);
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+
+        .privacy-notice .material-symbols-rounded {
+            color: var(--md-sys-color-primary);
+            flex-shrink: 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .empty-state .material-symbols-rounded {
+            font-size: 4rem;
+            opacity: 0.3;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bitwarden CSV Generator</h1>
+            <p class="subtitle">
+                <span class="material-symbols-rounded">lock</span>
+                Privacy-First Password Export Tool
+            </p>
+        </header>
+
+        <div class="privacy-badge">
+            <span class="material-symbols-rounded">verified_user</span>
+            100% Client-Side Processing - Your Data Never Leaves Your Device
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="material-symbols-rounded">folder</span>
+                <h2 class="card-title">Folder Configuration</h2>
+            </div>
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="text" id="folderName" placeholder=" ">
+                    <label for="folderName">Folder Name</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="material-symbols-rounded">language</span>
+                <h2 class="card-title">Websites / Services</h2>
+            </div>
+            <div id="sitesContainer"></div>
+            <button class="btn btn-secondary" onclick="addSite()">
+                <span class="material-symbols-rounded">add</span>
+                Add Website
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="material-symbols-rounded">badge</span>
+                <h2 class="card-title">Credentials (Username & Password Pairs)</h2>
+            </div>
+            <div id="credentialsContainer"></div>
+            <button class="btn btn-secondary" onclick="addCredential()">
+                <span class="material-symbols-rounded">add</span>
+                Add Credential Pair
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="generateCSV()">
+                    <span class="material-symbols-rounded">download</span>
+                    Generate & Download CSV
+                </button>
+                <button class="btn btn-secondary" onclick="clearAll()">
+                    <span class="material-symbols-rounded">delete</span>
+                    Clear All
+                </button>
+            </div>
+
+            <div class="output-section" id="outputSection" style="display: none;">
+                <div class="output-box">
+                    <div class="output-header">
+                        <label>CSV Preview</label>
+                        <button class="btn btn-secondary" onclick="copyToClipboard()">
+                            <span class="material-symbols-rounded">content_copy</span>
+                            Copy
+                        </button>
+                    </div>
+                    <pre class="csv-output" id="csvOutput"></pre>
+                </div>
+            </div>
+
+            <div class="privacy-notice">
+                <span class="material-symbols-rounded">info</span>
+                <div>
+                    <strong>Privacy & Security:</strong> All processing happens entirely in your browser. No data is transmitted to any server. 
+                    Your passwords and credentials remain completely private and secure on your device.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let siteCount = 0;
+        let credentialCount = 0;
+
+        function addSite() {
+            siteCount++;
+            const container = document.getElementById('sitesContainer');
+            const siteEntry = document.createElement('div');
+            siteEntry.className = 'site-entry';
+            siteEntry.id = `site-${siteCount}`;
+            siteEntry.innerHTML = `
+                <div class="entry-header">
+                    <div class="entry-number">${siteCount}</div>
+                    <button class="btn btn-remove" onclick="removeSite(${siteCount})" title="Remove">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="text" class="site-name" id="site-name-${siteCount}" placeholder=" ">
+                        <label for="site-name-${siteCount}">Website Name</label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="text" class="site-url" id="site-url-${siteCount}" placeholder=" ">
+                        <label for="site-url-${siteCount}">URL</label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <textarea class="site-notes" id="site-notes-${siteCount}" placeholder=" "></textarea>
+                        <label for="site-notes-${siteCount}" class="textarea-label">Notes (Optional)</label>
+                    </div>
+                </div>
+            `;
+            container.appendChild(siteEntry);
+        }
+
+        function removeSite(id) {
+            const element = document.getElementById(`site-${id}`);
+            if (element) {
+                element.style.transform = 'translateX(-100%)';
+                element.style.opacity = '0';
+                setTimeout(() => element.remove(), 300);
+            }
+        }
+
+        function addCredential() {
+            credentialCount++;
+            const container = document.getElementById('credentialsContainer');
+            const credEntry = document.createElement('div');
+            credEntry.className = 'credential-entry';
+            credEntry.id = `cred-${credentialCount}`;
+            credEntry.innerHTML = `
+                <div class="entry-header">
+                    <div class="entry-number">${credentialCount}</div>
+                    <button class="btn btn-remove" onclick="removeCredential(${credentialCount})" title="Remove">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="text" class="cred-username" id="cred-username-${credentialCount}" placeholder=" ">
+                        <label for="cred-username-${credentialCount}">Username / Email</label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="text" class="cred-password" id="cred-password-${credentialCount}" placeholder=" ">
+                        <label for="cred-password-${credentialCount}">Password</label>
+                    </div>
+                </div>
+            `;
+            container.appendChild(credEntry);
+        }
+
+        function removeCredential(id) {
+            const element = document.getElementById(`cred-${id}`);
+            if (element) {
+                element.style.transform = 'translateX(-100%)';
+                element.style.opacity = '0';
+                setTimeout(() => element.remove(), 300);
+            }
+        }
+
+        function escapeCSV(str) {
+            if (!str) return '';
+            str = String(str);
+            if (str.includes('"') || str.includes(',') || str.includes('\n')) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+
+        function generateCSV() {
+            const folderName = document.getElementById('folderName').value.trim();
+            
+            // Get all sites
+            const sites = Array.from(document.querySelectorAll('.site-entry')).map(entry => ({
+                name: entry.querySelector('.site-name')?.value.trim() || '',
+                url: entry.querySelector('.site-url')?.value.trim() || '',
+                notes: entry.querySelector('.site-notes')?.value.trim() || ''
+            })).filter(site => site.name || site.url);
+
+            // Get all credentials
+            const credentials = Array.from(document.querySelectorAll('.credential-entry')).map(entry => ({
+                username: entry.querySelector('.cred-username')?.value.trim() || '',
+                password: entry.querySelector('.cred-password')?.value.trim() || ''
+            })).filter(cred => cred.username || cred.password);
+
+            if (sites.length === 0 && credentials.length === 0) {
+                alert('Please add at least one website or credential pair.');
+                return;
+            }
+
+            // Bitwarden CSV format header
+            let csv = 'folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp\n';
+
+            // Generate entries for each combination of site and credential
+            if (sites.length > 0 && credentials.length > 0) {
+                // Create entry for each site-credential combination
+                sites.forEach(site => {
+                    credentials.forEach(cred => {
+                        const row = [
+                            escapeCSV(folderName),
+                            '',  // favorite
+                            'login',
+                            escapeCSV(site.name),
+                            escapeCSV(site.notes),
+                            '',  // fields
+                            '',  // reprompt
+                            escapeCSV(site.url),
+                            escapeCSV(cred.username),
+                            escapeCSV(cred.password),
+                            ''   // totp
+                        ];
+                        csv += row.join(',') + '\n';
+                    });
+                });
+            } else if (sites.length > 0) {
+                // Only sites, no credentials
+                sites.forEach(site => {
+                    const row = [
+                        escapeCSV(folderName),
+                        '',
+                        'login',
+                        escapeCSV(site.name),
+                        escapeCSV(site.notes),
+                        '',
+                        '',
+                        escapeCSV(site.url),
+                        '',
+                        '',
+                        ''
+                    ];
+                    csv += row.join(',') + '\n';
+                });
+            } else {
+                // Only credentials, no sites
+                credentials.forEach((cred, idx) => {
+                    const row = [
+                        escapeCSV(folderName),
+                        '',
+                        'login',
+                        escapeCSV(`Credential ${idx + 1}`),
+                        '',
+                        '',
+                        '',
+                        '',
+                        escapeCSV(cred.username),
+                        escapeCSV(cred.password),
+                        ''
+                    ];
+                    csv += row.join(',') + '\n';
+                });
+            }
+
+            // Display preview
+            document.getElementById('csvOutput').textContent = csv;
+            document.getElementById('outputSection').style.display = 'block';
+
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const filename = folderName ? `bitwarden_${folderName.replace(/\s+/g, '_')}.csv` : 'bitwarden_export.csv';
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function copyToClipboard() {
+            const csvText = document.getElementById('csvOutput').textContent;
+            navigator.clipboard.writeText(csvText).then(() => {
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-rounded">check</span>Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                document.getElementById('folderName').value = '';
+                document.getElementById('sitesContainer').innerHTML = '';
+                document.getElementById('credentialsContainer').innerHTML = '';
+                document.getElementById('outputSection').style.display = 'none';
+                siteCount = 0;
+                credentialCount = 0;
+            }
+        }
+
+        // Initialize with one site and one credential
+        addSite();
+        addCredential();
+    </script>
+</body>
+</html>
